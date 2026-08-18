@@ -13,8 +13,6 @@ export class ParcsService {
   }
 
   async get(id: string): Promise<ParcDto> {
-    const response = await this.http.request<{ data: ParcDto }>('/parcs/' + encodeURIComponent(id));
-  
-    return response.data
+    return this.http.request<ParcDto>(`/parcs/${encodeURIComponent(id)}`);
   }
 }
