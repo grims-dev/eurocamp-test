@@ -161,12 +161,15 @@ export class HttpClientService {
       throw new ApiError({ method, url, status: response.status });
     }
     
-    // 204 responses (eg. DELETE) have no body to parse.
-    if (response.status === 204) {
+    // Not every empty response uses 204 - upstream DELETE replies 200 with an
+    // empty body, which response.json() would reject.
+    const text = await response.text();
+
+    if (!text) {
       return undefined as T;
     }
 
-    return (await response.json()) as T;
+    return JSON.parse(text) as T;
   }
 
   /** Network failures and timeouts arrive as plain Errors, not ApiErrors. */

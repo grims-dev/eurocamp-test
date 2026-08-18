@@ -2,13 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ApiError } from './api.error';
 import { HttpClientService } from './http-client.service';
 
-/** Minimal stand-in for the parts of Response the client actually reads. */
-const respondWith = (status: number, body: unknown = {}) =>
+/**
+ * Minimal stand-in for the parts of Response the client actually reads.
+ * Omitting the body models an empty response.
+ */
+const respondWith = (status: number, body?: unknown) =>
   ({
     ok: status >= 200 && status < 300,
     status,
-    json: async () => body,
-  } as Response);
+    text: async () => (body === undefined ? '' : JSON.stringify(body)),
+  } as unknown as Response);
 
 describe('HttpClientService', () => {
   let service: HttpClientService;
@@ -53,13 +56,20 @@ describe('HttpClientService', () => {
       expect(fetchMock.mock.calls[0][0]).toBe('http://localhost:3001/api/1/parcs');
     });
 
-    it('does not parse a body from a 204', async () => {
-      const json = jest.fn();
-      fetchMock.mockResolvedValue({ ok: true, status: 204, json } as unknown as Response);
+    it('returns undefined for a 204', async () => {
+      fetchMock.mockResolvedValue(respondWith(204));
 
-      await expect(service.request('/parcs/1', { ...noCache, method: 'DELETE' }))
-        .resolves.toBeUndefined();
-      expect(json).not.toHaveBeenCalled();
+      await expect(
+        service.request('/parcs/1', { ...noCache, method: 'DELETE' })
+      ).resolves.toBeUndefined();
+    });
+
+    it('returns undefined for a 200 with an empty body, as upstream DELETE sends', async () => {
+      fetchMock.mockResolvedValue(respondWith(200));
+
+      await expect(
+        service.request('/parcs/1', { ...noCache, method: 'DELETE' })
+      ).resolves.toBeUndefined();
     });
   });
 

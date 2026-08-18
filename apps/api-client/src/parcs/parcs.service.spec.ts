@@ -44,4 +44,24 @@ describe('ParcsService', () => {
 
     expect(http.request).toHaveBeenCalledWith('/parcs/a%2F..%2Fb');
   });
+
+  it('posts the body when creating', async () => {
+    const payload = { name: 'New', description: 'New parc' };
+    http.request.mockResolvedValue({ id: '2', ...payload });
+
+    await service.create(payload);
+
+    expect(http.request).toHaveBeenCalledWith('/parcs', {
+      method: 'POST',
+      body: payload,
+    });
+  });
+
+  it('deletes by id', async () => {
+    http.request.mockResolvedValue(undefined);
+
+    await service.remove('1');
+
+    expect(http.request).toHaveBeenCalledWith('/parcs/1', { method: 'DELETE' });
+  });
 });
