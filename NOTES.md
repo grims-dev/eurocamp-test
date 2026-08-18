@@ -1,3 +1,7 @@
+# Ciaran Grimshaw technical test
+
+Thank you for reviewing my application :)
+
 ## Task 1
 
 Created and seeded local DB instance with tables `bookings`, `parcs` and `users`, and checked out the local endpoints in Postman.
@@ -14,3 +18,9 @@ Bookings table:
 
 Users table:
 - Column `email` could have a unique constraint for automatic duplicate prevention at DB level.
+
+## Task 2
+
+Back end - More focus on aggressive error handling as part of the design, and resiliency with idempotency keys on writes. Defining explicit schema management with libraries like class-validator or Zod. Also a shift away from cloud-based services serving everything by default, used more as useful tools to support primarily self hosted applications with Kubernetes and consolidation around Postgres on data side.
+
+Front end - Lots of focus on the best ways of retrieving data from the server and managing state. Nextjs and Nuxt support server components for optimising client bundles, better SEO capabilities and speed of rendering. Other libraries like Tanstack Query are now very popular with clean data fetching and handling of staleness, cache, retries, etc.
