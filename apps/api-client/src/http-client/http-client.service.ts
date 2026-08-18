@@ -6,26 +6,77 @@ export interface RequestOptions {
   body?: unknown;
   /** Overrides the default per-request timeout. */
   timeoutMs?: number;
+  /** Overrides how many times a failed call is retried. */
+  retries?: number;
+  /** Base delay for backoff. */
+  retryDelayMs?: number;
 }
+
+/** Methods safe to replay. */
+const IDEMPOTENT_METHODS = ['GET', 'DELETE'];
 
 /** Wrapper class for all HTTP requests in this app to handle unreliable API calls. */
 @Injectable()
 export class HttpClientService {
   private readonly logger = new Logger(HttpClientService.name);
 
-  // TODO: move baseUrl/timeout into ConfigModule rather than reading env here
+  // TODO: move these into ConfigModule rather than reading env here
   private readonly baseUrl =
     process.env.EUROCAMP_API_URL ?? 'http://localhost:3001/api/1';
   private readonly defaultTimeoutMs = Number(
     process.env.EUROCAMP_API_TIMEOUT_MS ?? 5000
   );
+  private readonly defaultRetries = Number(
+    process.env.EUROCAMP_API_RETRIES ?? 3
+  );
+  private readonly defaultRetryDelayMs = 200;
+  private readonly maxRetryDelayMs = 2000;
 
   /**
-   * Performs a single HTTP call and returns the parsed body
+   * Performs an HTTP call, retrying transient failures.
    */
   async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const { method = 'GET', body, timeoutMs = this.defaultTimeoutMs } = options;
+    const {
+      method = 'GET',
+      retries = this.defaultRetries,
+      retryDelayMs = this.defaultRetryDelayMs,
+    } = options;
+
     const url = `${this.baseUrl}${path}`;
+    const maxAttempts = IDEMPOTENT_METHODS.includes(method) ? retries + 1 : 1;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await this.attempt<T>(url, method, options);
+      } catch (error) {
+        // A non-transient failure will not fix itself, so fail fast. The final
+        // attempt throws here too, so the loop never falls out of the bottom.
+        if (attempt === maxAttempts) {
+          throw error;
+        }
+
+        const delay = this.backoffDelay(attempt, retryDelayMs);
+
+        this.logger.warn(
+          `${method} ${url} failed (${error instanceof Error ? error.message : String(error)}), ` +
+            `retrying in ${delay}ms [${attempt}/${maxAttempts}]`
+        );
+
+        await this.sleep(delay);
+      }
+    }
+
+    // Only reachable if maxAttempts were somehow below one.
+    throw new Error(`Request failed with ${maxAttempts} attempts`);
+  }
+
+  /** A single HTTP request attempt. */
+  private async attempt<T>(
+    url: string,
+    method: string,
+    options: RequestOptions
+  ): Promise<T> {
+    const { body, timeoutMs = this.defaultTimeoutMs } = options;
 
     this.logger.log(`${method} ${url}`);
 
@@ -54,10 +105,19 @@ export class HttpClientService {
     return (await response.json()) as T;
   }
 
+  /** Exponential backoff with jitter. */
+  private backoffDelay(attempt: number, baseDelayMs: number): number {
+    const exponential = baseDelayMs * 2 ** (attempt - 1);
+
+    return Math.round(Math.random() * Math.min(exponential, this.maxRetryDelayMs));
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   // TODO: map failures to a typed api error (status, url, attempts) so callers can interpret failures
   // TODO: retry server/network failures only - 502/503/504, timeouts, network errors
-  // TODO: exponential backoff, jitter
-  // TODO: only retry idempotent verbs by default (GET/DELETE)
   // TODO: short lived TTL cache for GETs
   // TODO: unit tests with jest mocking fetch and fake timers
 }
