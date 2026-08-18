@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
+import { ApiError } from "./api.error";
 
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'DELETE';
@@ -34,6 +35,7 @@ export class HttpClientService {
 
   /**
    * Performs an HTTP call, retrying transient failures.
+   * Throws an ApiError once retries are exhausted.
    */
   async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const {
@@ -49,16 +51,19 @@ export class HttpClientService {
       try {
         return await this.attempt<T>(url, method, options);
       } catch (error) {
+        const apiError = this.toApiError(error, method, url);
+        apiError.attempts = attempt;
+
         // A non-transient failure will not fix itself, so fail fast. The final
         // attempt throws here too, so the loop never falls out of the bottom.
-        if (attempt === maxAttempts) {
-          throw error;
+        if (!apiError.retryable || attempt === maxAttempts) {
+          throw apiError;
         }
 
         const delay = this.backoffDelay(attempt, retryDelayMs);
 
         this.logger.warn(
-          `${method} ${url} failed (${error instanceof Error ? error.message : String(error)}), ` +
+          `${method} ${url} failed (${apiError.status ?? 'no response'}), ` +
             `retrying in ${delay}ms [${attempt}/${maxAttempts}]`
         );
 
@@ -67,7 +72,7 @@ export class HttpClientService {
     }
 
     // Only reachable if maxAttempts were somehow below one.
-    throw new Error(`Request failed with ${maxAttempts} attempts`);
+    throw new ApiError({ method, url, message: `${method} ${url}: no attempts made` });
   }
 
   /** A single HTTP request attempt. */
@@ -98,11 +103,26 @@ export class HttpClientService {
     }
 
     if (!response.ok) {
-      // TODO: replace with a typed ApiError carrying status/url/attempts
-      throw new Error(`${method} ${url} failed with ${response.status}`);
+      throw new ApiError({ method, url, status: response.status });
+    }
+    
+    // 204 responses (eg. DELETE) have no body to parse.
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return (await response.json()) as T;
+  }
+
+  /** Network failures and timeouts arrive as plain Errors, not ApiErrors. */
+  private toApiError(error: unknown, method: string, url: string): ApiError {
+    if (error instanceof ApiError) {
+      return error;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+
+    return new ApiError({ method, url, message: `${method} ${url}: ${message}` });
   }
 
   /** Exponential backoff with jitter. */
@@ -116,8 +136,6 @@ export class HttpClientService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // TODO: map failures to a typed api error (status, url, attempts) so callers can interpret failures
-  // TODO: retry server/network failures only - 502/503/504, timeouts, network errors
   // TODO: short lived TTL cache for GETs
   // TODO: unit tests with jest mocking fetch and fake timers
 }
