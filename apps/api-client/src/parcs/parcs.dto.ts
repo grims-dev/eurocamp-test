@@ -1,4 +1,5 @@
-
 export class ParcDto {
-  // TODO
+  id!: string;
+  name!: string;
+  description!: string;
 }
