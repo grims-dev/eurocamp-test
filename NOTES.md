@@ -32,8 +32,10 @@ NOTE: There was a fair bit of setup involved so I went way over the time limit, 
 ### Running it
 
 ```
+docker compose up -d  # the provided API http://localhost:3001
 npm install
-npx nx serve api-client # http://localhost:3333/api
+npx nx serve api-client  # my api client http://localhost:3333/api
+npx nx serve frontend  # my frontend http://localhost:4200
 ```
 
 Tests and lint:
@@ -50,15 +52,28 @@ I decided to go with a HttpClient service in a new api-client app, as a single c
 
 Then added a module per resource with the full set of endpoints, each importing `HttpClientModule`.
 
+What I would add next:
+
+- Idempotency keys on writes, so creates could be retried safely instead of being left alone.
+- Move the base url, timeouts and retry counts into `ConfigModule`. They are still read from `process.env` with a TODO on them.
+
 ### Frontend
 
-Not built - I had already run over time. I would have approached it as follows:
+Next.js with Tanstack Query, showing the same parcs twice, one with my api-client and the other from the flaky API.
 
-- Next.js pointed at my api-client app, so the retries, caching and error handling already live server side and the browser only ever talks to something stable.
-- Use Server Components for the initial read, Tanstack Query for interactive bits.
-- Use the ApiError error form to help dictate the client's actions on what data is shown and what actions can be taken - for example, optimistic deletes, but not creates.
-- Components for each relevant domain (bookings, parcs, users) can handle their own requests and state so that if one part fails, the rest of the app stays hydrated with live data.
-- Set up a types library so the back end and front end are using the exact same models, reducing chance of friction.
+- Each card fetches its own parc, so a failure is isolated to that card.
+- Delete is optimistic and rolls back on failure, create is not.
+- Server Components would have been the modern preference but I stuck to Next13 with the current version of NX.
+
+One change to the provided API: no parc write was flaky, so I added `FlakeyApiInterceptor(0.5)` to `POST /parcs` to see the create failure path.
+
+What I would add next:
+
+- The other two domains. Only parcs is built, and bookings would want the parc and user names resolving rather than showing raw ids.
+- Proper routing. Everything currently sits on the index page - the proper structur would be a route per resource (`/parcs`, `/bookings`, `/users`) with an individual page at `/parcs/[id]`.
+- A shared types library so the api-client and frontend compile against the same models, instead of the frontend redeclaring them.
+- Frontend tests, mocking components and network requests so we can test happy paths and 502s.
+
 
 ### Other notes
 
