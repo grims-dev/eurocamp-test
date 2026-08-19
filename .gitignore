@@ -4,6 +4,7 @@ eurocamp-data
 .DS_Store
 node_modules
 dist
+tsconfig.tsbuildinfo
 
 # Next.js
 .next
