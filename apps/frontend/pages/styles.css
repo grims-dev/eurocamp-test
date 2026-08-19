@@ -398,3 +398,41 @@ summary svg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.panel {
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.cards {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.4rem;
+  min-height: 2.6rem;
+}
+
+.cardError {
+  border-color: #b3261e;
+  color: #b3261e;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+button {
+  margin: 0.5rem 0;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}

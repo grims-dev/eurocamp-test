@@ -1,2 +1,11 @@
 .page {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1rem;
 }
