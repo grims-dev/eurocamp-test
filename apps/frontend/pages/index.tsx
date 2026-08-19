@@ -13,6 +13,11 @@ export function Index() {
     queryFn: async (): Promise<Parc[]> => {
       const response = await fetch('http://localhost:3001/api/1/parcs');
 
+      // Handle fetch resolving but not ok
+      if (!response.ok) {
+        throw new Error(`Request failed with ${response.status}`);
+      }
+
       const json = await response.json();
       // Handle array unwrap
       return Array.isArray(json) ? json : json.data;
