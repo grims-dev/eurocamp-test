@@ -59,3 +59,7 @@ Not built - I had already run over time. I would have approached it as follows:
 - Use the ApiError error form to help dictate the client's actions on what data is shown and what actions can be taken - for example, optimistic deletes, but not creates.
 - Components for each relevant domain (bookings, parcs, users) can handle their own requests and state so that if one part fails, the rest of the app stays hydrated with live data.
 - Set up a types library so the back end and front end are using the exact same models, reducing chance of friction.
+
+### Other notes
+
+Noticed the Docker was trying to transfer a ton of context over on the second load of the container. After a little look, the dockerignore had not specified the `eurocamp-data` DB volume and other build/install-related folders like `node_modules`, so the build context was roughly 700mb in total. Updated .dockerignore to ignore these and it now composes quickly.
