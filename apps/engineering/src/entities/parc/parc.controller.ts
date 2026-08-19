@@ -48,6 +48,7 @@ export class ParcController {
 
   @ApiCreatedResponse({ type: AllParcResponseContract })
   @ApiBadRequestResponse()
+  @UseInterceptors(new FlakeyApiInterceptor(0.5))
   @Post()
   async create(@Body() payload: {name: string, description: string}): Promise<ParcResponseDto> {
     const parc = await this.parcService.newUser({
