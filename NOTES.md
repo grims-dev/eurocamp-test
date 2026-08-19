@@ -27,7 +27,7 @@ Front end - Lots of focus on the best ways of retrieving data from the server an
 
 ## Task 3
 
-NOTE: There was a fair bit of setup involved so I went way over the time limit, but I wanted to put some stuff in so I instructed Claude to finish some of the remaining TODO's (**Commits prepended with `[AI assisted]`, everything else is me!**).
+NOTE: There was a fair bit of setup involved so I went way over the time limit, but I wanted to complete the task so I instructed Claude to finish some of the remaining TODO's (In the Git history, **I prepended commits with "`[AI assisted]`", everything else is me!**).
 
 ### Running it
 
@@ -52,4 +52,10 @@ Then added a module per resource with the full set of endpoints, each importing 
 
 ### Frontend
 
-Not built - I had already run over time. I would have done Next.js pointed at my api-client app, so the retries, caching and error handling already live server side and the browser only ever talks to something stable. Use Server Components for the initial read, Tanstack Query for interactive bits. Use the ApiError error form to help dictate the client's actions on what data is shown.
+Not built - I had already run over time. I would have approached it as follows:
+
+- Next.js pointed at my api-client app, so the retries, caching and error handling already live server side and the browser only ever talks to something stable.
+- Use Server Components for the initial read, Tanstack Query for interactive bits.
+- Use the ApiError error form to help dictate the client's actions on what data is shown and what actions can be taken - for example, optimistic deletes, but not creates.
+- Components for each relevant domain (bookings, parcs, users) can handle their own requests and state so that if one part fails, the rest of the app stays hydrated with live data.
+- Set up a types library so the back end and front end are using the exact same models, reducing chance of friction.
