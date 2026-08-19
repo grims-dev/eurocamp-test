@@ -78,7 +78,7 @@ What I would add next:
 
 Screenshot of the front end, with api-client (left col) and flaky API (right col).
 
-![Parc list comparison](docs\parcs-list.png)
+![Parc list comparison](docs/parcs-list.png)
 
 
 ### Other notes
