@@ -9,3 +9,15 @@ Dockerfile.dev.postgres
 .github
 .lsp
 .vscode
+
+# Eurocamp's DB volume.
+eurocamp-data
+
+# Build/install artifacts.
+node_modules
+**/node_modules
+dist
+coverage
+.nx
+**/.next
+tmp
