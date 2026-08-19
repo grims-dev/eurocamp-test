@@ -8,6 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
+  app.enableCors();
   // Keeps upstream failures from being flattened into a generic 500.
   app.useGlobalFilters(new ApiErrorFilter());
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
