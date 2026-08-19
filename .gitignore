@@ -4,3 +4,6 @@ eurocamp-data
 .DS_Store
 node_modules
 dist
+
+# Next.js
+.next
