@@ -74,6 +74,12 @@ What I would add next:
 - A shared types library so the api-client and frontend compile against the same models, instead of the frontend redeclaring them.
 - Frontend tests, mocking components and network requests so we can test happy paths and 502s.
 
+### Example
+
+Screenshot of the front end, with api-client (left col) and flaky API (right col).
+
+![Parc list comparison](docs\parcs-list.png)
+
 
 ### Other notes
 
