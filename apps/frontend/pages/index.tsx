@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parc } from '../components/parc-card';
 import { ParcsPanel } from '../components/parcs-panel';
+import { CreateParc } from '../components/create-parc';
 import styles from './index.module.css';
 
 const CLIENT_URL = 'http://localhost:3333/api';
@@ -37,6 +38,8 @@ export function Index() {
     <div className={styles.page}>
       <h1>Parcs</h1>
       <p>A listing of parcs with each card making their own requests.</p>
+
+      <CreateParc baseUrl={CLIENT_URL} />
 
       <button onClick={() => queryClient.invalidateQueries({ queryKey: ['parc'] })}>
         Refetch both

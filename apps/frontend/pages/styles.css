@@ -436,3 +436,22 @@ button {
   padding: 0.4rem 0.8rem;
   cursor: pointer;
 }
+
+.createForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.createForm input {
+  border: 1px solid #d8d8d8;
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+}
+
+.error {
+  color: #b3261e;
+  font-weight: 600;
+}
